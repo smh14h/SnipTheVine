@@ -29,18 +29,59 @@ import SpriteKit
 
 class VineNode: SKNode {
   
+  private let length: Int
+  private let anchorPoint: CGPoint
+  private var vineSegments: [SKNode] = []
+  
   init(length: Int, anchorPoint: CGPoint, name: String) {
     
+    self.length = length
+    self.anchorPoint = anchorPoint
+    
     super.init()
+    
+    self.name = name
   }
   
   required init?(coder aDecoder: NSCoder) {
+    
+    length = aDecoder.decodeInteger(forKey: "length")
+    anchorPoint = aDecoder.decodeCGPoint(forKey: "anchorPoint")
     
     super.init(coder: aDecoder)
   }
   
   func addToScene(_ scene: SKScene) {
+    // add vine to scene
+    zPosition = Layer.Vine
+    scene.addChild(self)
     
+    // create vine holder
+    let vineHolder = SKSpriteNode(imageNamed: ImageName.VineHolder)
+    vineHolder.position = anchorPoint
+    vineHolder.zPosition = 1
+    
+    addChild(vineHolder)
+    
+    vineHolder.physicsBody = SKPhysicsBody(circleOfRadius: vineHolder.size.width / 2)
+    vineHolder.physicsBody?.isDynamic = false
+    vineHolder.physicsBody?.categoryBitMask = PhysicsCategory.VineHolder
+    vineHolder.physicsBody?.collisionBitMask = 0
+    
+    // add each of the vine parts
+    for i in 0..<length {
+      let vineSegment = SKSpriteNode(imageNamed: ImageName.VineTexture)
+      let offset = vineSegment.size.height * CGFloat(i + 1)
+      vineSegment.position = CGPoint(x: anchorPoint.x, y: anchorPoint.y - offset)
+      vineSegment.name = name
+      
+      vineSegments.append(vineSegment)
+      addChild(vineSegment)
+      
+      vineSegment.physicsBody = SKPhysicsBody(rectangleOf: vineSegment.size)
+      vineSegment.physicsBody?.categoryBitMask = PhysicsCategory.Vine
+      vineSegment.physicsBody?.collisionBitMask = PhysicsCategory.VineHolder
+    }
     
   }
   

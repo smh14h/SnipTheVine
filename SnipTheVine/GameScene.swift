@@ -27,8 +27,10 @@
 import SpriteKit
 import AVFoundation
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
   
+  private var crocodile: SKSpriteNode!
+  private var prize: SKSpriteNode!
   private var particles: SKEmitterNode?
   
   override func didMove(to view: SKView) {
@@ -44,7 +46,9 @@ class GameScene: SKScene {
   //MARK: - Level setup
   
   fileprivate func setUpPhysics() {
-    
+    physicsWorld.contactDelegate = self
+    physicsWorld.gravity = CGVector(dx: 0.0, dy: -9.8)
+    physicsWorld.speed = 1.0
     
   }
   
@@ -67,26 +71,70 @@ class GameScene: SKScene {
   }
   
   fileprivate func setUpPrize() {
+    prize = SKSpriteNode(imageNamed: ImageName.Prize)
+    prize.position = CGPoint(x: size.width * 0.5, y: size.height * 0.7)
+    prize.zPosition = Layer.Prize
+    prize.physicsBody = SKPhysicsBody(texture: SKTexture(imageNamed: ImageName.Prize), size: prize.size)
+    prize.physicsBody?.categoryBitMask = PhysicsCategory.Prize
+    prize.physicsBody?.collisionBitMask = 0
+    prize.physicsBody?.density = 0.5
     
+    addChild(prize)
     
   }
   
   //MARK: - Vine methods
   
   fileprivate func setUpVines() {
+    // 1 load vine data
+    let dataFile = Bundle.main.path(forResource: GameConfiguration.VineDataFile, ofType: nil)
+    let vines = NSArray(contentsOfFile: dataFile!) as! [NSDictionary]
     
+    // 2 add vines
+    for i in 0..<vines.count {
+      // 3 create vine
+      let vineData = vines[i]
+      let length = Int(vineData["length"] as! NSNumber)
+      let relAnchorPoint = CGPointFromString(vineData["relAnchorPoint"] as! String)
+      let anchorPoint = CGPoint(x: relAnchorPoint.x * size.width,
+                                y: relAnchorPoint.y * size.height)
+      let vine = VineNode(length: length, anchorPoint: anchorPoint, name: "\(i)")
+      
+      // 4 add to scene
+      vine.addToScene(self)
+      
+      // 5 connect the other end of the vine to the prize
+      vine.attachToPrize(prize)
+    }
     
   }
   
   //MARK: - Croc methods
   
   fileprivate func setUpCrocodile() {
+    crocodile = SKSpriteNode(imageNamed: ImageName.CrocMouthClosed)
+    crocodile.position = CGPoint(x: size.width * 0.75, y: size.height * 0.312)
+    crocodile.zPosition = Layer.Crocodile
+    crocodile.physicsBody = SKPhysicsBody(texture: SKTexture(imageNamed: ImageName.CrocMask), size: crocodile.size)
+    crocodile.physicsBody?.categoryBitMask = PhysicsCategory.Crocodile
+    crocodile.physicsBody?.collisionBitMask = 0
+    crocodile.physicsBody?.contactTestBitMask = PhysicsCategory.Prize
+    crocodile.physicsBody?.isDynamic = false
     
+    addChild(crocodile)
+    
+    animateCrocodile()
     
   }
   
   fileprivate func animateCrocodile() {
+    let duration = 2.0 + drand48() * 2.0
+    let open = SKAction.setTexture(SKTexture(imageNamed: ImageName.CrocMouthOpen))
+    let wait = SKAction.wait(forDuration: duration)
+    let close = SKAction.setTexture(SKTexture(imageNamed: ImageName.CrocMouthClosed))
+    let sequence = SKAction.sequence([wait, open, wait, close])
     
+    crocodile.run(SKAction.repeatForever(sequence))
     
   }
   

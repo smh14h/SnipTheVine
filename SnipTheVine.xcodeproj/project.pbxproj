@@ -185,10 +185,9 @@
 			};
 			buildConfigurationList = 175512C31E290767008D8076 /* Build configuration list for PBXProject "SnipTheVine" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
 				Base,
 			);
