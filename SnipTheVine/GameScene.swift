@@ -139,14 +139,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
   
   fileprivate func runNomNomAnimationWithDelay(_ delay: TimeInterval) {
+    crocodile.removeAllActions()
     
+    let closeMouth = SKAction.setTexture(SKTexture(imageNamed: ImageName.CrocMouthClosed))
+    let wait = SKAction.wait(forDuration: delay)
+    let openMouth = SKAction.setTexture(SKTexture(imageNamed: ImageName.CrocMouthOpen))
+    let sequence = SKAction.sequence([closeMouth, wait, openMouth, wait, closeMouth])
+    
+    crocodile.run(sequence)
     
   }
   
   //MARK: - Touch handling
   
   override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-    
+    for touch in touches {
+      let startPoint = touch.location(in: self)
+      let endPoint = touch.previousLocation(in: self)
+      
+      // check if vine cut
+      scene?.physicsWorld.enumerateBodies(alongRayStart: startPoint, end: endPoint,
+                                          using: { (body, point, normal, stop) in
+                                            self.checkIfVineCutWithBody(body)
+      })
+      
+      // produce some nice particles
+      showMoveParticles(touchPosition: startPoint)
+    }
     
   }
   
@@ -172,12 +191,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
   
   func didBegin(_ contact: SKPhysicsContact) {
-    
+    if (contact.bodyA.node == crocodile && contact.bodyB.node == prize)
+      || (contact.bodyA.node == prize && contact.bodyB.node == crocodile) {
+      
+      // shrink the pineapple away
+      let shrink = SKAction.scale(to: 0, duration: 0.08)
+      let removeNode = SKAction.removeFromParent()
+      let sequence = SKAction.sequence([shrink, removeNode])
+      prize.run(sequence)
+      runNomNomAnimationWithDelay(0.15)
+    }
     
   }
   
   fileprivate func checkIfVineCutWithBody(_ body: SKPhysicsBody) {
+    let node = body.node!
     
+    // if it has a name it must be a vine node
+    if let name = node.name {
+      // snip the vine
+      node.removeFromParent()
+      
+      // fade out all nodes matching name
+      enumerateChildNodes(withName: name, using: { (node, stop) in
+        let fadeAway = SKAction.fadeOut(withDuration: 0.25)
+        let removeNode = SKAction.removeFromParent()
+        let sequence = SKAction.sequence([fadeAway, removeNode])
+        node.run(sequence)
+      })
+    }
     
   }
   
