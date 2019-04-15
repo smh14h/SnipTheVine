@@ -32,6 +32,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   private var crocodile: SKSpriteNode!
   private var prize: SKSpriteNode!
   private var particles: SKEmitterNode?
+  private static var backgroundMusicPlayer: AVAudioPlayer!
+  private var sliceSoundAction: SKAction!
+  private var splashSoundAction: SKAction!
+  private var nomNomSoundAction: SKAction!
+  private var levelOver = false
+  let chomp = UIImpactFeedbackGenerator(style: .heavy)
+  let splash = UIImpactFeedbackGenerator(style: .light)
+  private var vineCut = false
   
   override func didMove(to view: SKView) {
     setUpPhysics()
@@ -152,6 +160,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   
   //MARK: - Touch handling
   
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    vineCut = false
+  }
+  
   override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
     for touch in touches {
       let startPoint = touch.location(in: self)
@@ -187,10 +199,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   //MARK: - Game logic
   
   override func update(_ currentTime: TimeInterval) {
-    // Called before each frame is rendered
+    if levelOver {
+      return
+    }
+    
+    if prize.position.y <= 0 {
+      run(splashSoundAction)
+      splash.impactOccurred()
+      levelOver = true
+      switchToNewGameWithTransition(SKTransition.fade(withDuration: 1.0))
+    }
   }
   
   func didBegin(_ contact: SKPhysicsContact) {
+    if levelOver {
+      return
+    }
+    
     if (contact.bodyA.node == crocodile && contact.bodyB.node == prize)
       || (contact.bodyA.node == prize && contact.bodyB.node == crocodile) {
       
@@ -200,11 +225,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       let sequence = SKAction.sequence([shrink, removeNode])
       prize.run(sequence)
       runNomNomAnimationWithDelay(0.15)
+      run(nomNomSoundAction)
+      chomp.impactOccurred()
+      levelOver = true
+      
+      // transition to next level
+      switchToNewGameWithTransition(SKTransition.doorway(withDuration: 1.0))
     }
     
   }
   
   fileprivate func checkIfVineCutWithBody(_ body: SKPhysicsBody) {
+    if vineCut && !GameConfiguration.CanCutMultipleVinesAtOnce {
+      return
+    }
+    
     let node = body.node!
     
     // if it has a name it must be a vine node
@@ -219,12 +254,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let sequence = SKAction.sequence([fadeAway, removeNode])
         node.run(sequence)
       })
+      
+      run(sliceSoundAction)
+      crocodile.removeAllActions()
+      crocodile.texture = SKTexture(imageNamed: ImageName.CrocMouthOpen)
+      animateCrocodile()
     }
     
+    vineCut = true
   }
   
   fileprivate func switchToNewGameWithTransition(_ transition: SKTransition) {
+    let delay = SKAction.wait(forDuration: 1)
+    let sceneChange = SKAction.run({
+      let scene = GameScene(size: self.size)
+      self.view?.presentScene(scene, transition: transition)
+    })
     
+    run(SKAction.sequence([delay, sceneChange]))
     
   }
   
@@ -232,7 +279,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   
   fileprivate func setUpAudio() {
     
+    sliceSoundAction = SKAction.playSoundFileNamed(SoundFile.Slice, waitForCompletion: false)
+    splashSoundAction = SKAction.playSoundFileNamed(SoundFile.Splash, waitForCompletion: false)
+    nomNomSoundAction = SKAction.playSoundFileNamed(SoundFile.NomNom, waitForCompletion: false)
     
+    if GameScene.backgroundMusicPlayer == nil {
+      let backgroundMusicURL = Bundle.main.url(forResource: SoundFile.BackgroundMusic, withExtension: nil)
+      
+      do {
+        let theme = try AVAudioPlayer(contentsOf: backgroundMusicURL!)
+        GameScene.backgroundMusicPlayer = theme
+        
+      } catch {
+        // couldn't load file :[
+      }
+      
+      GameScene.backgroundMusicPlayer.numberOfLoops = -1
+    }
+    
+    if !GameScene.backgroundMusicPlayer.isPlaying {
+      GameScene.backgroundMusicPlayer.play()
+    }
   }
   
 }
