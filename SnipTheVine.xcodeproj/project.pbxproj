@@ -351,7 +351,7 @@
 		175512E11E290767008D8076 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = newicon;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = SnipTheVine/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
@@ -365,7 +365,7 @@
 		175512E21E290767008D8076 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = newicon;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = SnipTheVine/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;

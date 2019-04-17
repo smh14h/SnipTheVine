@@ -29,14 +29,14 @@ import UIKit
 struct ImageName {
   static let Background = "Background"
   static let Ground = "Ground"
-  static let Water = "Water"
-  static let VineTexture = "VineTexture"
+  static let Water = "blood"
+  static let VineTexture = "chaintexture"
   static let VineHolder = "VineHolder"
-  static let CrocMouthClosed = "CrocMouthClosed"
-  static let CrocMouthOpen = "CrocMouthOpen"
-  static let CrocMask = "CrocMask"
-  static let Prize = "Pineapple"
-  static let PrizeMask = "PineappleMask"
+  static let CrocMouthClosed = "skullclosed"
+  static let CrocMouthOpen = "skullopen"
+  static let CrocMask = "skullmask"
+  static let Prize = "pumpkin"
+  static let PrizeMask = "pumpkinmask"
 }
 
 struct SoundFile {
